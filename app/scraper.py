@@ -1,11 +1,12 @@
 """Instagram scraper using instagrapi."""
 
 import logging
-import time
 import random
-from typing import Optional
+import time
+from typing import Callable, Optional
+
 from instagrapi import Client
-from instagrapi.exceptions import LoginRequired, ClientError
+from instagrapi.exceptions import ClientError, LoginRequired
 
 from app.config import get_settings
 from app.models import FollowerInfo
@@ -54,9 +55,9 @@ class InstagramScraper:
             logger.error(f"Login failed: {e}")
             return False
 
-    def _random_delay(self):
+    def _random_delay(self, min_sec: float = 1.0, max_sec: float = 3.0) -> None:
         """Add random delay to avoid rate limiting."""
-        delay = random.uniform(1.0, 3.0)
+        delay = random.uniform(min_sec, max_sec)
         time.sleep(delay)
 
     def get_user_info(self, username: str) -> Optional[dict]:
@@ -102,8 +103,8 @@ class InstagramScraper:
         current_depth: int = 1,
         max_depth: int = 1,
         min_followers: int = 3000,
-        visited: set = None,
-        on_progress: callable = None
+        visited: Optional[set[str]] = None,
+        on_progress: Optional[Callable[[str], None]] = None
     ) -> list[FollowerInfo]:
         """
         Recursively analyze followers.

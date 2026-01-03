@@ -1,8 +1,9 @@
 """Pydantic models for API requests and responses."""
 
-from pydantic import BaseModel
-from typing import Optional
 from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class JobStatus(str, Enum):
@@ -15,16 +16,17 @@ class JobStatus(str, Enum):
 
 class AnalyzeRequest(BaseModel):
     """Request to analyze an Instagram account."""
-    username: str
-    depth: int = 1
+    username: str = Field(..., min_length=1, max_length=30, description="Instagram username")
+    depth: int = Field(default=1, ge=1, le=10, description="Recursion depth")
 
-    class Config:
-        json_schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "username": "instagram",
                 "depth": 2
             }
         }
+    }
 
 
 class FollowerInfo(BaseModel):
