@@ -18,6 +18,10 @@ build/
 *.swp
 *.swo
 
+# App
+session.json
+*.log
+
 # Project specific
 session.json
 *.log

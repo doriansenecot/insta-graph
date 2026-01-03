@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       - INSTAGRAM_USERNAME=${INSTAGRAM_USERNAME}
       - INSTAGRAM_PASSWORD=${INSTAGRAM_PASSWORD}
@@ -13,7 +13,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./session.json:/app/session.json:rw
+      - ./session.json:/app/session.json
     restart: unless-stopped
 
   redis:
