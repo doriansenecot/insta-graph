@@ -3,7 +3,7 @@
 import logging
 import random
 import time
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from instagrapi import Client
 from instagrapi.exceptions import ClientError, LoginRequired
@@ -32,8 +32,7 @@ class InstagramScraper:
             try:
                 self.client.load_settings("session.json")
                 self.client.login(
-                    self.settings.instagram_username,
-                    self.settings.instagram_password
+                    self.settings.instagram_username, self.settings.instagram_password
                 )
                 self._logged_in = True
                 logger.info("Logged in using saved session")
@@ -42,10 +41,7 @@ class InstagramScraper:
                 pass
 
             # Fresh login
-            self.client.login(
-                self.settings.instagram_username,
-                self.settings.instagram_password
-            )
+            self.client.login(self.settings.instagram_username, self.settings.instagram_password)
             self.client.dump_settings("session.json")
             self._logged_in = True
             logger.info("Fresh login successful, session saved")
@@ -60,7 +56,7 @@ class InstagramScraper:
         delay = random.uniform(min_sec, max_sec)
         time.sleep(delay)
 
-    def get_user_info(self, username: str) -> Optional[dict]:
+    def get_user_info(self, username: str) -> dict | None:
         """Get user information by username."""
         try:
             self._random_delay()
@@ -71,7 +67,7 @@ class InstagramScraper:
                 "full_name": user.full_name,
                 "follower_count": user.follower_count,
                 "following_count": user.following_count,
-                "is_private": user.is_private
+                "is_private": user.is_private,
             }
         except ClientError as e:
             logger.error(f"Failed to get user info for {username}: {e}")
@@ -87,9 +83,9 @@ class InstagramScraper:
                     "user_id": user.pk,
                     "username": user.username,
                     "full_name": user.full_name,
-                    "follower_count": getattr(user, 'follower_count', 0),
-                    "following_count": getattr(user, 'following_count', 0),
-                    "is_private": user.is_private
+                    "follower_count": getattr(user, "follower_count", 0),
+                    "following_count": getattr(user, "following_count", 0),
+                    "is_private": user.is_private,
                 }
                 for user in followers.values()
             ]
@@ -103,12 +99,11 @@ class InstagramScraper:
         current_depth: int = 1,
         max_depth: int = 1,
         min_followers: int = 3000,
-        visited: Optional[set[str]] = None,
-        on_progress: Optional[Callable[[str], None]] = None
+        visited: set[str] | None = None,
+        on_progress: Callable[[str], None] | None = None,
     ) -> list[FollowerInfo]:
-        """
-        Recursively analyze followers.
-        
+        """Recursively analyze followers.
+
         Args:
             username: Target Instagram username
             current_depth: Current recursion depth
@@ -116,7 +111,7 @@ class InstagramScraper:
             min_followers: Minimum follower count filter
             visited: Set of already visited usernames
             on_progress: Callback for progress updates
-        
+
         Returns:
             List of FollowerInfo objects matching the criteria
         """
@@ -154,14 +149,16 @@ class InstagramScraper:
 
             # Check if meets minimum followers criteria
             if follower_info["follower_count"] >= min_followers:
-                results.append(FollowerInfo(
-                    username=follower_info["username"],
-                    full_name=follower_info["full_name"],
-                    follower_count=follower_info["follower_count"],
-                    following_count=follower_info["following_count"],
-                    is_private=follower_info["is_private"],
-                    depth=current_depth
-                ))
+                results.append(
+                    FollowerInfo(
+                        username=follower_info["username"],
+                        full_name=follower_info["full_name"],
+                        follower_count=follower_info["follower_count"],
+                        following_count=follower_info["following_count"],
+                        is_private=follower_info["is_private"],
+                        depth=current_depth,
+                    )
+                )
 
                 # Recurse if not at max depth and not private
                 if current_depth < max_depth and not follower_info["is_private"]:
@@ -171,7 +168,7 @@ class InstagramScraper:
                         max_depth,
                         min_followers,
                         visited,
-                        on_progress
+                        on_progress,
                     )
                     results.extend(nested)
 
