@@ -5,16 +5,16 @@ import os
 import sys
 
 from dotenv import load_dotenv
-load_dotenv()
-
 from instagrapi import Client
 from instagrapi.exceptions import TwoFactorRequired
+
+load_dotenv()
 
 
 def main() -> None:
     """Main entry point for Instagram login."""
-    username = os.environ.get('INSTAGRAM_USERNAME')
-    password = os.environ.get('INSTAGRAM_PASSWORD')
+    username = os.environ.get("INSTAGRAM_USERNAME")
+    password = os.environ.get("INSTAGRAM_PASSWORD")
 
     if not username or not password:
         print("Error: INSTAGRAM_USERNAME and INSTAGRAM_PASSWORD must be set in .env")
