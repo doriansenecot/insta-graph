@@ -65,12 +65,12 @@ class TestAnalyzeEndpoint:
     def test_analyze_creates_job(self, client, mock_redis):
         """POST /analyze should create a new job."""
         mock_redis.get.return_value = None
-        
+
         response = client.post(
             "/analyze",
             json={"username": "testuser", "depth": 1}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "job_id" in data
