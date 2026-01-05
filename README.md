@@ -1,7 +1,5 @@
 # Instagram Followers Scraper
 
-[![CI](https://github.com/doriansenecot/insta-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/doriansenecot/insta-graph/actions/workflows/ci.yml)
-
 Microservice d'analyse des followers Instagram. Identifie les comptes influents (>N followers) parmi les abonnés d'un compte public, avec support de profondeur récursive.
 
 ## Prérequis
