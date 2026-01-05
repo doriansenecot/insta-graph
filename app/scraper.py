@@ -1,10 +1,12 @@
 """Instagram scraper using instagrapi."""
 
+import json
 import logging
 import random
 import time
 from collections.abc import Callable
 
+import redis
 from instagrapi import Client
 from instagrapi.exceptions import ClientError, LoginRequired
 
@@ -12,6 +14,9 @@ from app.config import get_settings
 from app.models import FollowerInfo
 
 logger = logging.getLogger(__name__)
+
+# Redis cache TTL for user profiles (24 hours)
+USER_CACHE_TTL = 86400
 
 
 class InstagramScraper:
@@ -21,6 +26,14 @@ class InstagramScraper:
         self.client = Client()
         self.settings = get_settings()
         self._logged_in = False
+        self._redis: redis.Redis | None = None
+
+    @property
+    def redis_client(self) -> redis.Redis:
+        """Lazy Redis connection for user cache."""
+        if self._redis is None:
+            self._redis = redis.from_url(self.settings.redis_url)
+        return self._redis
 
     def login(self) -> bool:
         """Login to Instagram. Returns True if successful."""
@@ -56,12 +69,36 @@ class InstagramScraper:
         delay = random.uniform(min_sec, max_sec)
         time.sleep(delay)
 
+    def _get_cached_user(self, username: str) -> dict | None:
+        """Get user info from Redis cache."""
+        try:
+            cached = self.redis_client.get(f"user:{username}")
+            if cached:
+                logger.debug(f"Cache hit for user {username}")
+                return json.loads(cached)
+        except redis.RedisError as e:
+            logger.warning(f"Redis cache error: {e}")
+        return None
+
+    def _cache_user(self, username: str, user_info: dict) -> None:
+        """Cache user info in Redis."""
+        try:
+            self.redis_client.setex(f"user:{username}", USER_CACHE_TTL, json.dumps(user_info))
+            logger.debug(f"Cached user {username}")
+        except redis.RedisError as e:
+            logger.warning(f"Redis cache error: {e}")
+
     def get_user_info(self, username: str) -> dict | None:
-        """Get user information by username."""
+        """Get user information by username (with Redis cache)."""
+        # Check cache first
+        cached = self._get_cached_user(username)
+        if cached:
+            return cached
+
         try:
             self._random_delay()
             user = self.client.user_info_by_username(username)
-            return {
+            user_info = {
                 "user_id": user.pk,
                 "username": user.username,
                 "full_name": user.full_name,
@@ -69,6 +106,9 @@ class InstagramScraper:
                 "following_count": user.following_count,
                 "is_private": user.is_private,
             }
+            # Cache the result
+            self._cache_user(username, user_info)
+            return user_info
         except ClientError as e:
             logger.error(f"Failed to get user info for {username}: {e}")
             return None
