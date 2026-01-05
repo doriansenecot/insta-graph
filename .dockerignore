@@ -1,0 +1,40 @@
+# Environment and secrets
+.env
+.env.*
+session.json
+
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Testing
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Linting
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# CI/CD
+.github/
+
+# Documentation
+*.md
