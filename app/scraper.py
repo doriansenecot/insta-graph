@@ -182,13 +182,23 @@ class InstagramScraper:
         logger.info(f"Found {len(followers)} followers for {username}")
 
         for follower in followers:
-            # We need full user info for follower count
-            follower_info = self.get_user_info(follower["username"])
-            if not follower_info:
-                continue
+            # Use follower_count from get_followers() if available (>0)
+            # Only fetch full user info if count is missing/zero
+            if follower.get("follower_count", 0) > 0:
+                follower_count = follower["follower_count"]
+                # Quick filter: skip if definitely below threshold
+                if follower_count < min_followers:
+                    continue
+                follower_info = follower  # Use existing data
+            else:
+                # Need to fetch full info for accurate follower count
+                follower_info = self.get_user_info(follower["username"])
+                if not follower_info:
+                    continue
+                follower_count = follower_info["follower_count"]
 
             # Check if meets minimum followers criteria
-            if follower_info["follower_count"] >= min_followers:
+            if follower_count >= min_followers:
                 results.append(
                     FollowerInfo(
                         username=follower_info["username"],
